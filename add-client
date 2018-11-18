@@ -1,0 +1,32 @@
+#!/bin/bash
+
+set -e
+
+USER=$1
+
+cd /etc/openvpn/easy-rsa
+. ./vars
+./build-key $USER
+
+if [ -z "$1" ]; then
+  echo "client name required!"
+  exit 1
+fi
+mkdir -p /etc/openvpn/easy-rsa/clients/$USER
+
+FILE="/etc/openvpn/easy-rsa/clients/$USER/$USER.ovpn"
+cp /etc/openvpn/easy-rsa/keys/client.ovpn $FILE
+
+echo '<ca>' >> $FILE
+cat /etc/openvpn/ca.crt >> $FILE
+echo '</ca>' >> $FILE
+
+echo '<cert>' >> $FILE
+cat /etc/openvpn/easy-rsa/keys/$USER.crt >> $FILE
+echo '</cert>' >> $FILE
+
+echo '<key>' >> $FILE
+cat /etc/openvpn/easy-rsa/keys/$USER.key >> $FILE
+echo '</key>' >> $FILE
+
+echo "Config file generated at $FILE. Send it to client"
